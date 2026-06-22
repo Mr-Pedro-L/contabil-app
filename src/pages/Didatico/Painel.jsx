@@ -49,6 +49,7 @@ const styles = {
   bg: {
     minHeight: "100vh",
     background: "#0f172a",
+    paddingTop: "100px",
     padding: "20px",
     color: "white"
   },
