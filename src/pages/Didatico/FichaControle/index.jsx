@@ -194,13 +194,16 @@ export default function FichaControle({ setTela }) {
 }
 
 const styles = {
-  bg: {
-    minHeight: "100vh",
-    padding: "20px",
-    paddingTop: "80px",
-    background: "#0f172a",
-    color: "white"
-  },
+ 
+bg: {
+  minHeight: "100vh",
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "flex-start",
+  background: "#0f172a",
+  color: "white",
+  padding: "20px"
+},
 
   mercadoria: {
     marginBottom: "20px",
@@ -234,7 +237,7 @@ const styles = {
     gridTemplateColumns:
       "120px 180px repeat(9, 90px) 80px",
     gap: "5px",
-    padding: "14px", // ✅ MAIS ESPAÇADO
+    padding: "14px",
     background: "#1e293b",
     borderRadius: "6px"
   }

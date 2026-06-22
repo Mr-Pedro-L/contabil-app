@@ -89,15 +89,15 @@ export default function Balanco({ setTela, contas }) {
 }
 
 const styles = {
+
   bg: {
-    minHeight: "100vh",
-    paddingTop: "80px",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    background: "#0f172a",
-    color: "white"
-  },
+  minHeight: "100vh",
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "flex-start",
+background: "#1e293b",  color: "white",
+  padding: "20px"
+},
 
   card: {
     width: "90%",
