@@ -16,16 +16,30 @@ export default function Login({ setTela }) {
   }, [usuarios]);
 
   function logar() {
+
+    const user = usuario.trim();
+    const pass = senha.trim();
+
+    localStorage.removeItem("usuarioLogadoTemp");
+
+    // ✅ ADMIN
+    if (user === "pedro" && pass === "1234") {
+      setTela("admin");
+      return;
+    }
+
+    // ✅ usuários normais
     const existe = usuarios.find(
-      (u) => u.usuario === usuario && u.senha === senha
+      (u) => u.usuario === user && u.senha === pass
     );
 
-    if (existe) {
-      localStorage.setItem("usuarioLogado", usuario);
-      setTela("painelDidatico");
-    } else {
-      alert("Usuário ou senha inválidos ❌");
+    if (!existe) {
+      alert("Usuário inválido ❌");
+      return;
     }
+
+    localStorage.setItem("usuarioLogadoTemp", user);
+    setTela("saas");
   }
 
   function cadastrar() {
@@ -40,7 +54,7 @@ export default function Login({ setTela }) {
 
     setUsuarios([
       ...usuarios,
-      { usuario, senha }
+      { usuario, senha, ativo: true }
     ]);
 
     alert("Usuário cadastrado ✅");
@@ -112,3 +126,4 @@ const styles = {
     gap: "10px"
   }
 };
+``

@@ -1,5 +1,5 @@
 import { useState } from "react";
-
+import SaaSCheck from "./pages/SaaSCheck";
 import Login from "./pages/Login";
 import PainelDidatico from "./pages/Didatico/Painel";
 import LivroRazao from "./pages/Didatico/LivroRazao";
@@ -7,6 +7,9 @@ import Diario from "./pages/Didatico/Diario";
 import DRE from "./pages/Didatico/DRE";
 import FichaControle from "./pages/Didatico/FichaControle";
 import Balanco from "./pages/Didatico/Balanco";
+import Admin from "./pages/Admin.jsx";
+
+
 
 export default function App() {
 
@@ -15,14 +18,14 @@ export default function App() {
 
   const [contas, setContas] = useState([]);
 
-  const usuarioLogado = localStorage.getItem("usuarioLogado");
-
-  // ✅ TRAVA acesso sem login
-  if (!usuarioLogado && tela !== "login") {
-    return <Login setTela={setTela} />;
-  }
+  
 
   switch (tela) {
+    case "admin":
+  return <Admin setTela={setTela} />;
+
+case "saas":
+  return <SaaSCheck setTela={setTela} />;
 
     case "login":
       return <Login setTela={setTela} />;

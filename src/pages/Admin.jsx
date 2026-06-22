@@ -1,89 +1,158 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import ToolsBar from "../components/ToolsBar";
 
-export default function Admin({ setTela, usuarios, setUsuarios }) {
-  const [email, setEmail] = useState("");
-  const [senha, setSenha] = useState("");
+export default function Admin({ setTela }) {
 
-  function cadastrar() {
-    setUsuarios([...usuarios, { email, senha }]);
-    setEmail("");
-    setSenha("");
-    alert("Contador criado!");
+  const [usuarios, setUsuarios] = useState(() => {
+    return JSON.parse(localStorage.getItem("usuarios")) || [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem("usuarios", JSON.stringify(usuarios));
+  }, [usuarios]);
+
+  function adicionarUsuario() {
+    const usuario = prompt("Email:");
+    const senha = prompt("Senha:");
+
+    if (!usuario || !senha) return;
+
+    setUsuarios([
+      ...usuarios,
+      { usuario, senha, ativo: true }
+    ]);
   }
 
-  function excluir(index) {
-    const novaLista = usuarios.filter((_, i) => i !== index);
-    setUsuarios(novaLista);
+  function toggleAtivo(index) {
+    const nova = [...usuarios];
+    nova[index].ativo = !nova[index].ativo;
+    setUsuarios(nova);
+  }
+
+  function remover(index) {
+    setUsuarios(usuarios.filter((_, i) => i !== index));
   }
 
   return (
     <div style={styles.bg}>
-      <div style={styles.card}>
-        <h2>Painel do Admin</h2>
 
-        <input
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          style={styles.input}
-        />
+      <ToolsBar setTela={setTela} />
 
-        <input
-          type="password"
-          placeholder="Senha"
-          value={senha}
-          onChange={(e) => setSenha(e.target.value)}
-          style={styles.input}
-        />
+      <h1 style={styles.titulo}>⚡ Painel Admin</h1>
 
-        <button onClick={cadastrar} style={styles.button}>
-          Criar Contador
-        </button>
+      <button onClick={adicionarUsuario} style={styles.addBtn}>
+        ➕ Novo Cliente
+      </button>
 
-        <h3>Contadores:</h3>
+      <div style={styles.lista}>
+
+        {usuarios.length === 0 && (
+          <p>Nenhum usuário cadastrado</p>
+        )}
 
         {usuarios.map((u, i) => (
-          <div key={i}>
-            <p>{u.email}</p>
-            <button onClick={() => excluir(i)}>Excluir</button>
+          <div key={i} style={styles.card}>
+
+            <div>
+              <h3>{u.usuario}</h3>
+              <p style={styles.senha}>Senha: {u.senha}</p>
+
+              <p style={{
+                color: u.ativo ? "#22ff88" : "#ff4444",
+                fontWeight: "bold"
+              }}>
+                {u.ativo ? "ATIVO ✅" : "BLOQUEADO ❌"}
+              </p>
+            </div>
+
+            <div style={styles.actions}>
+              <button onClick={() => toggleAtivo(i)} style={styles.toggle}>
+                {u.ativo ? "Bloquear" : "Liberar"}
+              </button>
+
+              <button onClick={() => remover(i)} style={styles.delete}>
+                ❌
+              </button>
+            </div>
+
           </div>
         ))}
 
-        <button onClick={() => setTela("login")}>
-          Voltar
-        </button>
+     
       </div>
+
     </div>
   );
 }
 
 const styles = {
   bg: {
-    height: "100vh",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    background: "#111"
+    minHeight: "100vh",
+    padding: "100px 20px",
+    background: "radial-gradient(circle at top, #0f172a, #020617)",
+    color: "white"
   },
 
-  card: {
-    background: "white",
-    padding: "30px",
-    borderRadius: "20px"
+  titulo: {
+    textAlign: "center",
+    marginBottom: "20px",
+    color: "#22c55e",
+    textShadow: "0 0 10px #22c55e"
   },
 
-  input: {
+  addBtn: {
     display: "block",
-    margin: "10px 0",
-    padding: "10px"
+    margin: "0 auto 20px",
+    padding: "10px 20px",
+    background: "#22c55e",
+    border: "none",
+    borderRadius: "8px",
+    cursor: "pointer",
+    boxShadow: "0 0 10px #22c55e"
   },
 
-  button: {
-    padding: "10px",
-    background: "green",
-    color: "white",
+  lista: {
+    maxWidth: "800px",
+    margin: "auto"
+  },
+
+
+card: {
+  background: "#le2a3d",
+  padding: "20px",
+  borderRadius: "10px",
+  display: "flex",
+  flexDirection: "column",
+  gap: "10px",
+  width: "100%",
+  maxWidth: "400px"
+},
+
+
+
+  senha: {
+    fontSize: "12px",
+    color: "#aaa"
+  },
+
+  actions: {
+    display: "flex",
+    gap: "10px"
+  },
+
+  toggle: {
+    padding: "8px",
+    borderRadius: "6px",
     border: "none",
-    borderRadius: "5px"
+    background: "#22c55e",
+    cursor: "pointer"
+  },
+
+  delete: {
+    padding: "8px",
+    borderRadius: "6px",
+    border: "none",
+    background: "#ff4444",
+    cursor: "pointer"
   }
 };
-``

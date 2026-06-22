@@ -9,14 +9,13 @@ export default function ToolsBar({ setTela }) {
       <button onClick={() => setTela("fichaControle")}>📋 Ficha</button>
       <button onClick={() => setTela("balanco")}>🏦 Balanço</button>
 
-      <button
-        onClick={() => {
-          localStorage.removeItem("usuarioLogado");
-          setTela("login");
-        }}
-      >
-        🚪 Sair
-      </button>
+      <button onClick={() => {
+  localStorage.removeItem("usuarioLogado");
+  localStorage.removeItem("usuarioLogadoTemp"); importante
+  setTela("login");
+}}>
+  🚪 Sair
+</button>
 
     </div>
   );
