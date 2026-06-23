@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { supabase } from "../supabase";
 
 export default function Login({ setTela }) {
 
@@ -15,34 +16,80 @@ export default function Login({ setTela }) {
     localStorage.setItem("usuarios", JSON.stringify(usuarios));
   }, [usuarios]);
 
-  function logar() {
+  async function logar() {
 
-    const user = usuario.trim();
-    const pass = senha.trim();
+  const user = usuario.trim();
+  const pass = senha.trim();
 
-    localStorage.removeItem("usuarioLogadoTemp");
-
-    // ✅ ADMIN
-    if (user === "pedro" && pass === "1234") {
-      setTela("admin");
-      return;
-    }
-
-    // ✅ usuários normais
-    const existe = usuarios.find(
-      (u) => u.usuario === user && u.senha === pass
-    );
-
-    if (!existe) {
-      alert("Usuário inválido ❌");
-      return;
-    }
-
-    localStorage.setItem("usuarioLogadoTemp", user);
-    setTela("saas");
+  // ✅ ADMIN
+  if (user === "pedro" && pass === "1234") {
+    setTela("admin");
+    return;
   }
 
+  // ✅ verifica internet real
+  if (!navigator.onLine) {
+    validarOffline();
+    return;
+  }
+
+  // ✅ consulta Supabase
+  const { data, error } = await supabase
+    .from("usuarios")
+    .select("*")
+    .eq("usuario", user)
+    .eq("senha", pass)
+    .single();
+
+  // ❌ erro real (não é offline)
+  if (error || !data) {
+    alert("Usuário inválido ❌");
+    return;
+  }
+
+  // ✅ salva dados locais
+  localStorage.setItem("usuarioLogado", user);
+  localStorage.setItem("vencimentoLocal", data.vencimento);
+  localStorage.setItem("ultimoOnline", new Date().toISOString());
+
+  setTela("painelDidatico");
+}
+function validarOffline() {
+
+  console.log("Modo offline ativado");
+
+  const vencimentoLocal = localStorage.getItem("vencimentoLocal");
+  const ultimoOnline = localStorage.getItem("ultimoOnline");
+
+  if (!vencimentoLocal || !ultimoOnline) {
+    alert("Sem acesso offline disponível ❌");
+    return;
+  }
+
+  const hoje = new Date();
+  const vencimento = new Date(vencimentoLocal);
+  const ultimo = new Date(ultimoOnline);
+
+  const diasOffline = (hoje - ultimo) / (1000 * 60 * 60 * 24);
+
+  if (diasOffline > 7) {
+    alert("Conecte à internet ❌");
+    return;
+  }
+
+  if (hoje > vencimento) {
+    alert("Plano vencido ❌");
+    return;
+  }
+
+  setTela("painelDidatico");
+}
   function cadastrar() {
+    if (usuario === "pedro") {
+      alert("Usuário reservado ❌");
+      return;
+    }
+
     const jaExiste = usuarios.find(
       (u) => u.usuario === usuario
     );
@@ -69,12 +116,14 @@ export default function Login({ setTela }) {
         <h2>{modo === "login" ? "Login" : "Cadastro"}</h2>
 
         <input
+          style={styles.input}
           placeholder="Usuário"
           value={usuario}
           onChange={(e) => setUsuario(e.target.value)}
         />
 
         <input
+          style={styles.input}
           type="password"
           placeholder="Senha"
           value={senha}
@@ -83,19 +132,21 @@ export default function Login({ setTela }) {
 
         {modo === "login" ? (
           <>
-            <button onClick={logar}>Entrar</button>
+            <button style={styles.button} onClick={logar}>
+              Entrar
+            </button>
 
-            <p onClick={() => setModo("cadastro")}>
+            <p style={styles.link} onClick={() => setModo("cadastro")}>
               Criar conta
             </p>
           </>
         ) : (
           <>
-            <button onClick={cadastrar}>
+            <button style={styles.button} onClick={cadastrar}>
               Cadastrar
             </button>
 
-            <p onClick={() => setModo("login")}>
+            <p style={styles.link} onClick={() => setModo("login")}>
               Já tenho conta
             </p>
           </>
@@ -113,17 +164,42 @@ const styles = {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
+    padding: "20px",
     background: "#0f172a",
     color: "white"
   },
 
   card: {
     background: "#1e293b",
-    padding: "30px",
+    padding: "20px",
     borderRadius: "10px",
     display: "flex",
     flexDirection: "column",
-    gap: "10px"
+    gap: "10px",
+    width: "100%",
+    maxWidth: "400px"
+  },
+
+  input: {
+    padding: "12px",
+    fontSize: "16px",
+    borderRadius: "6px",
+    border: "none"
+  },
+
+  button: {
+    padding: "12px",
+    fontSize: "16px",
+    borderRadius: "6px",
+    border: "none",
+    background: "#22c55e",
+    color: "white",
+    cursor: "pointer"
+  },
+
+  link: {
+    cursor: "pointer",
+    fontSize: "14px",
+    textAlign: "center"
   }
 };
-``

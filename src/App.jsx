@@ -1,5 +1,4 @@
 import { useState } from "react";
-import SaaSCheck from "./pages/SaaSCheck";
 import Login from "./pages/Login";
 import PainelDidatico from "./pages/Didatico/Painel";
 import LivroRazao from "./pages/Didatico/LivroRazao";
@@ -23,9 +22,6 @@ export default function App() {
   switch (tela) {
     case "admin":
   return <Admin setTela={setTela} />;
-
-case "saas":
-  return <SaaSCheck setTela={setTela} />;
 
     case "login":
       return <Login setTela={setTela} />;
