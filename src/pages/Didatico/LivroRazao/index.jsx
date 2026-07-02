@@ -47,7 +47,11 @@ export default function LivroRazao({ setTela, contas, setContas }) {
           const totalD = debitos.reduce((s, m) => s + m.valor, 0);
           const totalC = creditos.reduce((s, m) => s + m.valor, 0);
 
-          const saldo = totalD - totalC;
+          const saldoInicial = conta.valor || 0;
+<div style={{ color: "#94a3b8" }}>
+  Saldo Inicial: R$ {saldoInicial}
+</div>
+const saldo = saldoInicial + totalD - totalC;
 
           return (
             <div key={i} style={styles.conta}>
@@ -131,7 +135,7 @@ export default function LivroRazao({ setTela, contas, setContas }) {
                   color: saldo < 0 ? "red" : "#22c55e"
                 }}
               >
-                Saldo: {saldo}
+                Saldo Atual: R$ {saldo}
               </div>
 
             </div>
@@ -144,12 +148,18 @@ export default function LivroRazao({ setTela, contas, setContas }) {
 }
 
 const styles = {
-  bg: {
-    minHeight: "100vh",
-    background: "#0f172a",
-    padding: "20px",
-    color: "white"
-  },
+ 
+bg: {
+  minHeight: "100vh",
+  width: "100%",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",   // ✅ centraliza tudo
+   paddingTop: "120px",    // ✅ espaço pro ToolsBar
+  background: "#0f172a",
+  color: "white"
+}
+,
 
   container: {
     maxWidth: "900px",

@@ -1,14 +1,28 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ToolsBar from "../../../components/ToolsBar";
 
 export default function DRE({ setTela }) {
 
-  const [categorias, setCategorias] = useState([
-    { nome: "Receita Bruta", contas: [] },
-    { nome: "Deduções", contas: [] },
-    { nome: "Custo das Mercadorias", contas: [] },
-    { nome: "Despesas Operacionais", contas: [] }
-  ]);
+  const [categorias, setCategorias] = useState(() => {
+
+  const dados = localStorage.getItem("dreCategorias");
+
+  return dados
+    ? JSON.parse(dados)
+    : [
+        { nome: "Receita Bruta", contas: [] },
+        { nome: "Deduções", contas: [] },
+        { nome: "Custo das Mercadorias", contas: [] },
+        { nome: "Despesas Operacionais", contas: [] }
+      ];
+
+});
+useEffect(() => {
+  localStorage.setItem(
+    "dreCategorias",
+    JSON.stringify(categorias)
+  );
+}, [categorias]);
 
   function adicionarConta(index) {
     const nova = [...categorias];
@@ -152,12 +166,17 @@ export default function DRE({ setTela }) {
 }
 
 const styles = {
-  bg: {
-    minHeight: "100vh",
-    background: "#0f172a",
-    padding: "20px",
-    color: "white"
-  },
+ 
+bg: {
+  minHeight: "100vh",
+  width: "100%",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",   // ✅ centraliza tudo
+  paddingTop: "120px",    // ✅ espaço pro ToolsBar
+  background: "#0f172a",
+  color: "white"
+},
 
   main: {
     display: "flex",
@@ -177,11 +196,15 @@ const styles = {
   },
 
   card: {
-    background: "#1e293b",
-    padding: "15px",
-    marginBottom: "15px",
-    borderRadius: "10px"
-  },
+  background: "#le2a3d",
+  padding: "20px",
+  borderRadius: "10px",
+  display: "flex",
+  flexDirection: "column",
+  gap: "10px",
+  width: "100%",
+  maxWidth: "400px"
+},
 
   linha: {
     display: "flex",

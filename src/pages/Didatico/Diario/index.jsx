@@ -1,22 +1,30 @@
 import { useState, useEffect } from "react";
 import ToolsBar from "../../../components/ToolsBar";
 
-export default function Diario({ setTela }) {
+export default function Diario({ setTela, contas }) {
 
   const [empresa, setEmpresa] = useState("Minha Empresa");
 
-  // ✅ CARGA DIRETA (evita perda de dados)
   const [lancamentos, setLancamentos] = useState(() => {
     const dados = localStorage.getItem("diario");
     return dados ? JSON.parse(dados) : [];
   });
 
-  // ✅ SALVA SEMPRE QUE MUDAR
+  // ✅ CALCULADORA %
+  const [valorCalc, setValorCalc] = useState("");
+  const [percCalc, setPercCalc] = useState("");
+  const [resultadoCalc, setResultadoCalc] = useState(null);
+
   useEffect(() => {
     localStorage.setItem("diario", JSON.stringify(lancamentos));
   }, [lancamentos]);
 
-  // ✅ NOVO LANÇAMENTO
+  function calcularPercentual() {
+    if (!valorCalc || !percCalc) return;
+    const res = (Number(valorCalc) * Number(percCalc)) / 100;
+    setResultadoCalc(res.toFixed(2));
+  }
+
   function adicionarLancamento() {
     setLancamentos([
       ...lancamentos,
@@ -24,8 +32,7 @@ export default function Diario({ setTela }) {
         data: "",
         descricao: "",
         debitos: [{ conta: "", valor: 0 }],
-        creditos: [{ conta: "", valor: 0 }],
-        correcoes: []
+        creditos: [{ conta: "", valor: 0 }]
       }
     ]);
   }
@@ -37,6 +44,12 @@ export default function Diario({ setTela }) {
   function adicionarLinha(index, tipo) {
     const nova = [...lancamentos];
     nova[index][tipo].push({ conta: "", valor: 0 });
+    setLancamentos(nova);
+  }
+
+  function removerLinha(indexL, tipo, i) {
+    const nova = [...lancamentos];
+    nova[indexL][tipo] = nova[indexL][tipo].filter((_, idx) => idx !== i);
     setLancamentos(nova);
   }
 
@@ -55,54 +68,6 @@ export default function Diario({ setTela }) {
     return total(l, "debitos") === total(l, "creditos");
   }
 
-  // 🔴 CORREÇÃO QUE REMOVE DO VALOR
-  function aplicarCorrecao(indexL, tipo, indexLinha) {
-    const nome = prompt("Nome (ex: ICMS)");
-    const percentual = Number(prompt("Percentual (%)"));
-
-    if (!nome || isNaN(percentual)) return;
-
-    const nova = [...lancamentos];
-    const linha = nova[indexL][tipo][indexLinha];
-
-    const valorOriginal = linha.valor;
-    const desconto = valorOriginal * (percentual / 100);
-
-    linha.valor = valorOriginal - desconto;
-
-    nova[indexL].correcoes.push({
-      nome,
-      percentual,
-      valor: desconto,
-      tipo: "desconto"
-    });
-
-    setLancamentos(nova);
-  }
-
-  // 🟢 CORREÇÃO QUE SÓ EXTRAI
-  function extrairPercentual(indexL, tipo, indexLinha) {
-    const nome = prompt("Nome (ex: ICMS)");
-    const percentual = Number(prompt("Percentual (%)"));
-
-    if (!nome || isNaN(percentual)) return;
-
-    const nova = [...lancamentos];
-    const linha = nova[indexL][tipo][indexLinha];
-
-    const valorOriginal = linha.valor;
-    const extraido = valorOriginal * (percentual / 100);
-
-    nova[indexL].correcoes.push({
-      nome,
-      percentual,
-      valor: extraido,
-      tipo: "extraido"
-    });
-
-    setLancamentos(nova);
-  }
-
   return (
     <div style={styles.bg}>
 
@@ -115,14 +80,41 @@ export default function Diario({ setTela }) {
         style={styles.empresa}
       />
 
+      {/* ✅ CALCULADORA */}
+      <div style={styles.calc}>
+        <h3>🧮 Calculadora %</h3>
+
+        <input
+          type="number"
+          placeholder="Valor"
+          value={valorCalc}
+          onChange={(e) => setValorCalc(e.target.value)}
+        />
+
+        <input
+          type="number"
+          placeholder="%"
+          value={percCalc}
+          onChange={(e) => setPercCalc(e.target.value)}
+        />
+
+        <button onClick={calcularPercentual}>Calcular</button>
+
+        {resultadoCalc && (
+          <p style={styles.result}>
+            Resultado: {resultadoCalc}
+          </p>
+        )}
+      </div>
+
       <button onClick={adicionarLancamento}>
         ➕ Novo Lançamento
       </button>
 
       {lancamentos.map((l, index) => {
 
-        const debTotal = total(l, "debitos");
-        const credTotal = total(l, "creditos");
+        const deb = total(l, "debitos");
+        const cred = total(l, "creditos");
 
         return (
           <div key={index} style={styles.card}>
@@ -147,18 +139,26 @@ export default function Diario({ setTela }) {
               }}
             />
 
-            {/* DÉBITOS */}
-            <h4>Débitos</h4>
+            {/* ✅ DÉBITOS */}
+            <h4 style={{ color: "#3b82f6" }}>Débitos</h4>
+
             {l.debitos.map((d, i) => (
               <div key={i} style={styles.linha}>
 
-                <input
-                  placeholder="Conta"
+                <select
                   value={d.conta}
                   onChange={(e) =>
                     atualizarLinha(index, "debitos", i, "conta", e.target.value)
                   }
-                />
+                >
+                  <option value="">Conta</option>
+
+                  {(contas || []).map((c, idx) => (
+                    <option key={idx} value={c.nome}>
+                      {c.nome}
+                    </option>
+                  ))}
+                </select>
 
                 <input
                   type="number"
@@ -166,35 +166,39 @@ export default function Diario({ setTela }) {
                   onChange={(e) =>
                     atualizarLinha(index, "debitos", i, "valor", e.target.value)
                   }
-                  style={{ color: "blue" }}
                 />
 
-                <button onClick={() => aplicarCorrecao(index, "debitos", i)}>
-                  -%
-                </button>
-
-                <button onClick={() => extrairPercentual(index, "debitos", i)}>
-                  %
+                <button onClick={() => removerLinha(index, "debitos", i)}>
+                  ❌
                 </button>
 
               </div>
             ))}
+
             <button onClick={() => adicionarLinha(index, "debitos")}>
               + Débito
             </button>
 
-            {/* CRÉDITOS */}
-            <h4>Créditos</h4>
+            {/* ✅ CRÉDITOS */}
+            <h4 style={{ color: "#ef4444" }}>Créditos</h4>
+
             {l.creditos.map((c, i) => (
               <div key={i} style={styles.linha}>
 
-                <input
-                  placeholder="Conta"
+                <select
                   value={c.conta}
                   onChange={(e) =>
                     atualizarLinha(index, "creditos", i, "conta", e.target.value)
                   }
-                />
+                >
+                  <option value="">Conta</option>
+
+                  {(contas || []).map((c2, idx) => (
+                    <option key={idx} value={c2.nome}>
+                      {c2.nome}
+                    </option>
+                  ))}
+                </select>
 
                 <input
                   type="number"
@@ -202,54 +206,37 @@ export default function Diario({ setTela }) {
                   onChange={(e) =>
                     atualizarLinha(index, "creditos", i, "valor", e.target.value)
                   }
-                  style={{ color: "red" }}
                 />
 
-                <button onClick={() => aplicarCorrecao(index, "creditos", i)}>
-                  -%
-                </button>
-
-                <button onClick={() => extrairPercentual(index, "creditos", i)}>
-                  %
+                <button onClick={() => removerLinha(index, "creditos", i)}>
+                  ❌
                 </button>
 
               </div>
             ))}
+
             <button onClick={() => adicionarLinha(index, "creditos")}>
               + Crédito
             </button>
 
-            {/* VALIDAÇÃO */}
+            {/* ✅ VALIDAÇÃO */}
             <div style={{
               fontWeight: "bold",
               color: podeSalvar(l) ? "#22c55e" : "red"
             }}>
-              Débitos: {debTotal} | Créditos: {credTotal}
+              Débitos: {deb} | Créditos: {cred}
             </div>
 
-            {/* AÇÕES */}
+            {/* ✅ AÇÕES */}
             <div style={styles.actions}>
               <button onClick={() => removerLancamento(index)}>
                 ❌ Excluir
               </button>
 
-              <button
-                disabled={!podeSalvar(l)}
-                onClick={() => alert("Lançamento salvo ✅")}
-              >
+              <button disabled={!podeSalvar(l)}>
                 💾 Salvar
               </button>
             </div>
-
-            {/* HISTÓRICO DE CORREÇÕES */}
-            {l.correcoes.map((c, i) => (
-              <div key={i} style={styles.correction}>
-                {c.tipo === "extraido"
-                  ? `${c.nome} (${c.percentual}%) = +${c.valor.toFixed(2)}`
-                  : `${c.nome} (-${c.percentual}%) = -${c.valor.toFixed(2)}`
-                }
-              </div>
-            ))}
 
           </div>
         );
@@ -260,46 +247,52 @@ export default function Diario({ setTela }) {
 }
 
 const styles = {
+
   bg: {
     minHeight: "100vh",
+    padding: "120px 20px",
     background: "#0f172a",
-    padding: "20px",
     color: "white"
   },
 
   empresa: {
-    display: "block",
     marginBottom: "20px",
-    fontSize: "20px",
     padding: "10px",
     borderRadius: "10px",
-    border: "2px solid #22c55e",
-    boxShadow: "0 0 10px #22c55e"
+    border: "2px solid #22c55e"
+  },
+
+  calc: {
+    background: "#1e293b",
+    padding: "15px",
+    borderRadius: "10px",
+    marginBottom: "20px",
+    display: "flex",
+    flexDirection: "column",
+    gap: "8px"
+  },
+
+  result: {
+    color: "#22c55e",
+    fontWeight: "bold"
   },
 
   card: {
     background: "#1e293b",
-    padding: "20px",
+    padding: "15px",
     borderRadius: "10px",
-    marginBottom: "20px"
+    marginTop: "15px"
   },
 
   linha: {
     display: "flex",
     gap: "10px",
-    marginBottom: "5px"
+    margin: "5px 0"
   },
 
   actions: {
     marginTop: "10px",
     display: "flex",
     gap: "10px"
-  },
-
-  correction: {
-    marginTop: "5px",
-    fontSize: "12px",
-    fontWeight: "bold"
   }
 };
-``

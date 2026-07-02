@@ -8,20 +8,20 @@ import FichaControle from "./pages/Didatico/FichaControle";
 import Balanco from "./pages/Didatico/Balanco";
 import Admin from "./pages/Admin.jsx";
 
-
-
 export default function App() {
 
-  // ✅ começa no login
   const [tela, setTela] = useState("login");
 
-  const [contas, setContas] = useState([]);
-
-  
+  // ✅ CARREGA AUTOMATICAMENTE
+  const [contas, setContas] = useState(() => {
+    const dados = localStorage.getItem("contas");
+    return dados ? JSON.parse(dados) : [];
+  });
 
   switch (tela) {
+
     case "admin":
-  return <Admin setTela={setTela} />;
+      return <Admin setTela={setTela} />;
 
     case "login":
       return <Login setTela={setTela} />;
@@ -54,18 +54,10 @@ export default function App() {
       );
 
     case "dre":
-      return (
-        <DRE
-          setTela={setTela}
-        />
-      );
+      return <DRE setTela={setTela} />;
 
     case "fichaControle":
-      return (
-        <FichaControle
-          setTela={setTela}
-        />
-      );
+      return <FichaControle setTela={setTela} />;
 
     case "balanco":
       return (
